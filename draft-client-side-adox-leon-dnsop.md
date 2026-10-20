@@ -9,8 +9,8 @@ number:
 date:
 consensus: true
 v: 3
- area: OPS
- workgroup: DNSOP
+area: OPS
+workgroup: DNSOP
 keyword:
  - DNS Privacy
 venue:
