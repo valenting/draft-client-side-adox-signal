@@ -3,7 +3,7 @@ title: "Client-side Request for Encrypted Authoritative DNS Queries"
 abbrev: "Client-side ADoX Signal"
 category: std
 
-docname: draft-client-side-adox-signal-leon-dnsop-latest
+docname: draft-fernandez-dnsop-client-side-adox-signal-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
@@ -19,7 +19,7 @@ venue:
   mail: dnsop@ietf.org
   arch: https://mailarchive.ietf.org/arch/browse/dnsop/
   github: "zluudg/draft-client-side-adox-signal"
-  latest: "https://zluudg.github.io/draft-client-side-adox-signal/draft-client-side-adox-signal-leon-dnsop.html"
+  latest: "https://zluudg.github.io/draft-client-side-adox-signal/draft-fernandez-dnsop-client-side-adox-signal.html"
 
 author:
  -
@@ -40,7 +40,7 @@ informative:
 --- abstract
 
 This document describes an EDNS0 option that a client can attach to a
-DNS query to signal to a recursive resolver that it should prefer
+DNS query to signal to a recursive resolver that it SHOULD prefer
 encrypted transports while resolving the query. The option can also
 be used on the return path by the recursor to signal whether encryption
 was achievable or not.
@@ -52,13 +52,13 @@ was achievable or not.
 # Introduction {#intro}
 A DNS client can choose what protocol to use when it sends a query to
 a resolver. There are several privacy-friendly options that the client
-can choose between such as HTTPS, QUIC and TLS. However, the choice
+can choose between such as HTTPS {{!RFC8484}}, QUIC {{!RFC9250}} and TLS {{!RFC7858}}. However, the choice
 only affects the first hop and the query will typically be sent in
 cleartext by the resolver during the resolution process. In order to
 preserve the privacy of the client beyond the first hop, the client
-should be able to signal a desire that the resolver uses encrypted
+SHOULD be able to signal a desire that the resolver uses encrypted
 transports during the resolution process. Furthermore, the client
-should be informed of how the resolution was carried out, in case it
+SHOULD be informed of how the resolution was carried out, in case it
 would like to discard data that was not received over an encrypted
 transport.
 
@@ -66,7 +66,7 @@ This document defines an EDNS0 {{!RFC6891}} option that allows a client
 to signal a preference for encrypted authoritative DNS (ADoX). By
 signalling a preference, the client can urge a recursive resolver to
 discover possibilities for encrypted transport. Means of discovery
-include, but are not limited to, {{!RFC9539}}, {{?I-D.johani-dnsop-transport-signaling}}
+include, but are not limited to, {{?RFC9539}}, {{?I-D.johani-dnsop-transport-signaling}}
 and {{?I-D.wesplaap-deleg-transport}}. The signal from the client can
 also prevent the recursive resolver from leaking queries that would
 otherwise have been sent in cleartext. The same EDNS0 option can also
@@ -75,7 +75,7 @@ indication to the client about what level of privacy was achieved for
 a particular query.
 
 # Terminology
-Client: A stub resolver, typically part of an end-users operating system
+Client: A stub resolver, typically part of an end-user's operating system
     or web browser.
 
 Recursive Resolver/Recursor: A resolver that resolves a query on behalf
@@ -97,17 +97,17 @@ The EDNS0 PRIVACY option is structured as follows:
      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
  2:  |                           OPTION-LENGTH                       |
      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
- 3:  |           PRIVACY             |            VALIDATED          |
+ 4:  |           PRIVACY             |            VALIDATED          |
      +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
 ~~~
 
 Field definition details:
 
-OPTION-CODE: The EDNS0 option code for client-privacy-request, defined
-    as TBD.
+OPTION-CODE: The EDNS0 option code for client-privacy-signal, defined
+    as TBD1.
 
-OPTION-LENGTH: The option length SHOULD have a value of exactly 1 if
-    this option is present. Consumers of this signal SHOULD NOT act on
+OPTION-LENGTH: The option length MUST have a value of 2 if this option
+    is present. Consumers of this signal SHOULD NOT act on
     malformed options.
 
 PRIVACY: For queries, this value encodes the client's desired level of
@@ -116,11 +116,11 @@ PRIVACY: For queries, this value encodes the client's desired level of
     listed in {{privacy-values}}.
 
 VALIDATED: For queries, this field is unused and MUST be set to 0.
-    For responses, it SHOULD be set to 1 if the recursor succesfully
+    For responses, it SHOULD be set to 1 if the recursor successfully
     validated the certificates it encountered during the resolution
-    process. Else, it should be set to 0. Validation can be done via
+    process. Else, it MUST be set to 0. Validation can be done via
     mechanisms such as DANE {{!RFC6698}} or the WebPKI. The VALIDATED
-    option SHOULD only be set if the PRIVACY option is CACHED or
+    field SHOULD only be set if the PRIVACY field is CACHED or
     ENCRYPTED.
 
 # Privacy Values {#privacy-values}
@@ -137,7 +137,7 @@ VALIDATED: For queries, this field is unused and MUST be set to 0.
 ## Interpretations of Privacy Values in a query context
 
 ### NONE
-Same effect as having to client signal at all. No privacy requested by
+Same effect as having no client signal at all. No privacy requested by
 the client that is sending the query.
 
 ### OPPORTUNISTIC
@@ -172,8 +172,9 @@ Given that the client sent its query using an encrypted transport, the
 recursive resolver will try to honor the PRIVACY option. If it is NONE,
 it means the client does not care about what transports are used to
 resolve the query and the recursor may resolve it in any way deemed
-suitable. If the option is OPPORTUNISTIC, the recursor MUST attempt to
-send any iterative queries over an encrypted transport. However, the
+suitable. If the option is OPPORTUNISTIC, the recursor MUST attempt
+encrypted transport to all nameserver it knows support encryption while
+traversing the delegation chain. However, the
 recursor is allowed to fall back to an unencrypted transport after a
 failed attempt. If the option is STRICT the recursor MUST NOT perform
 such a fallback at any point during the resolution process. Using
@@ -181,56 +182,139 @@ contents from the cache is always okay as this does not leak any
 information about the client's query.
 
 ## Setting a Response PRIVACY Value
-A recursive resolver should only set a EDNS0 PRIVACY option if the
+A recursive resolver SHOULD only set an EDNS0 PRIVACY option if the
 option was present in the query. If the data was readily available in
 the recursor's cache, it sets a value of CACHED. If at any point
 during the resolution process, a query was sent unencrypted (either
 due to falling back or to the client query having a value of NONE), the
 resolver MUST set the value to CLEARTEXT. If the resolver solely used
-encrypted transports and data from its cache to retrive the answer, it
+encrypted transports and data from its cache to retrieve the answer, it
 responds with a value of ENCRYPTED. What transport cached data arrived
 over does not matter in this case.
 
+## Failure to Honor a STRICT Request
+If the recursive resolver cannot obtain the answer without sending a
+query over an unencrypted transport, and the client requested STRICT,
+the resolver MUST NOT send that query. It MUST instead respond with
+RCODE SERVFAIL and SHOULD include an Extended DNS Error {{!RFC8914}}
+with INFO-CODE TBD2 ("Encrypted Transport Unavailable"). The response
+MUST include the PRIVACY option with the value ENCRYPTED, since no
+information about the query was sent in cleartext.
+
+It is expected that during early deployment, most STRICT requests will
+fail. However, for debugging purposes, such a signal is valuable for
+testing that recursive resolvers actually honor the encryption request.
+Also, as the technology matures, the STRICT option might eventually
+become viable.
+
 # Relation to QNAME minimisation
 QNAME minimisation {{!RFC9156}} is another privacy-enhancement for
-authoritative DNS that recursive resolvers can implement. It should be
+authoritative DNS that recursive resolvers can implement. It SHOULD be
 considered orthogonal to what is proposed in this draft. That is, the
 value that the recursor sets for the PRIVACY option SHOULD NOT be
 affected in any way by whether the recursor employs QNAME minimisation
 or not. QNAME minimization does not give as good privacy as encryption
-if there are more than two or three delagations. On the other hand,
+if there are more than two or three delegations. On the other hand,
 QNAME minimization avoids leaking information to authoritative servers,
 which means there might still be good reasons to use it.
-
-To encourage the use of both and avoid complex interplay between the
-two, QNAME minimization SHOULD NOT affect the PRIVACY option in a
-recursor's response.
 
 # Conventions and Definitions
 {::boilerplate bcp14-tagged}
 
+# Implementation Status {#impl-status}
+{: removeInRFC="true"}
+
+This section records the status of known implementations of the
+protocol defined by this specification at the time of posting of
+this Internet-Draft, and is based on a proposal described in
+{{?RFC7942}}. The description of implementations in this section is
+intended to assist the IETF in its decision processes in progressing
+drafts to RFCs. Please note that the listing of any individual
+implementation here does not imply endorsement by the IETF.
+Furthermore, no effort has been spent to verify the information
+presented here that was supplied by IETF contributors. This is not
+intended as, and must not be construed to be, a catalog of available
+implementations or their features. Readers are advised to note that
+other implementations may exist.
+
+According to {{?RFC7942}}, "this will allow reviewers and working
+groups to assign due consideration to documents that have the benefit
+of running code, which may serve as evidence of valuable
+experimentation and feedback that have made the implemented protocols
+more mature. It is up to the individual working groups to use this
+information as they see fit".
+
+## TDNS
+
+Organization:
+: The Swedish Internet Foundation
+
+Description:
+: TDNS, a framework of experimental DNS servers.
+  <https://github.com/johanix/tdns>
+
+Maturity:
+  : Experimental
+
+  Coverage:
+  : Recursive resolver: parsing the client signal, honoring
+    OPPORTUNISTIC and STRICT, setting the response PRIVACY value.
+    Stub/client: Setting the PRIVACY value and interpreting the PRIVACY
+    value in the response.
+
+  Licensing:
+  : BSD-2-Clause
+
+  Contact:
+  : johan.stenstam@internetstiftelsen.se
+
+  Last updated:
+  : October 2026
+
+## Firefox
+
+Organization:
+: Mozilla
+
+Description:
+: Firefox, a web-browser.
+  <https://phabricator.services.mozilla.com/D321467>
+
+Maturity:
+  : Experimental
+
+  Coverage:
+  : Setting the PRIVACY value in outgoing DoH queries and interpreting
+  the PRIVACY value in the response.
+
+  Licensing:
+  : MPL-2.0
+
+  Contact:
+  : ietf.valentin@gosu.se
+
+  Last updated:
+  : October 2026
 
 # Security Considerations {#security}
-Enables/simplifies cache probing through the CACHED option. Not a big
-deal, TTL can be used for that anyway.
+Enables/simplifies cache probing through the CACHED option. However,
+this is already possible through measuring response times or inspecting
+TTLs. The PRIVACY option does not introduce any novel attack vectors.
 
-TODO(Discussion of passive vs. active attacks. And the role of the
-VALIDATED flag.)
+The client can only really trust the PRIVACY option when it is received
+over a secure channel, such as DoH, from a trusted recursive resolver.
+This is somewhat analogous to how the AD-bit is used between a client
+and a resolver in DNSSEC {{!RFC4035}}.
 
 # IANA Considerations {#iana}
-This document defines a new EDNS(0) option, entitled "client-privacy-request",
-assigned a value of TBD "DNS EDNS0 Option Codes (OPT)" registry
+This document defines a new EDNS(0) option, entitled "client-privacy-signal",
+assigned a value of TBD1 "DNS EDNS0 Option Codes (OPT)" registry
 
 | Value | Name                     | Status   | Reference            |
 |-------|--------------------------|----------|----------------------|
-| TBD   | client-side-adox-signal  | Standard | ( This document )    |
+| TBD1  | client-privacy-signal  | Standard | ( This document )    |
 
 --- back
-
-# Implementation Status
-The TDNS Framework of experimental DNS servers developed and maintained by the
-Swedish Internet Foundation implements this draft (see [https://github.com/johanix/tdns](https://github.com/johanix/tdns)). TDNS has support for both the authoritative nameserver and
-recursive nameserver parts of the draft.
 
 
 # Acknowledgments
