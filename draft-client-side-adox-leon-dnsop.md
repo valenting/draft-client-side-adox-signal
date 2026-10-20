@@ -3,31 +3,33 @@ title: "Client-side Request for Encrypted Authoritative DNS Queries"
 abbrev: "Client-side ADoX Request"
 category: std
 
-docname: draft-client-side-adox-leon-dnsop-latest
+docname: draft-client-side-adox-signal-leon-dnsop-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
 consensus: true
 v: 3
-# area: AREA
-# workgroup: WG Working Group
+ area: OPS
+ workgroup: DNSOP
 keyword:
- - next generation
- - unicorn
- - AI-native
+ - DNS Privacy
 venue:
-#  group: WG
-#  type: Working Group
-#  mail: WG@example.com
-#  arch: https://example.com/WG
+  group: DNSOP
+  type: Working Group
+  mail: dnsop@ietf.org
+  arch: https://mailarchive.ietf.org/arch/browse/dnsop/
   github: "zluudg/draft-client-side-adox-signal"
-  latest: "https://zluudg.github.io/draft-client-side-adox-signal/draft-client-side-adox-leon-dnsop.html"
+  latest: "https://zluudg.github.io/draft-client-side-adox-signal/draft-client-side-adox-signal-leon-dnsop.html"
 
 author:
  -
     fullname: "Leon Fernandez"
-    organization: Your Organization Here
+    organization: The Swedish Internet Foundation
     email: "leon.fernandez@internetstiftelsen.se"
+ -
+    fullname: "Valentin Gosu"
+    organization: Mozilla
+    email: "ietf.valentin@gosu.se"
 
 normative:
 
@@ -216,13 +218,12 @@ TODO(Discussion of passive vs. active attacks. And the role of the
 VALIDATED flag.)
 
 # IANA Considerations {#iana}
-~~~
-   +-------+--------------------------+----------+----------------------+
-   | Value | Name                     | Status   | Reference            |
-   +-------+--------------------------+----------+----------------------+
-   | TBD   | client-privacy-request   | Standard | ( This document )    |
-   +-------+--------------------------+----------+----------------------+
-~~~
+This document defines a new EDNS(0) option, entitled "client-privacy-request",
+assigned a value of TBD "DNS EDNS0 Option Codes (OPT)" registry
+
+| Value | Name                     | Status   | Reference            |
+|-------|--------------------------|----------|----------------------|
+| TBD   | client-side-adox-signal  | Standard | ( This document )    |
 
 --- back
 
