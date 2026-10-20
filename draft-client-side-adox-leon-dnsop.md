@@ -172,7 +172,7 @@ it means the client does not care about what transports are used to
 resolve the query and the recursor may resolve it in any way deemed
 suitable. If the option is OPPORTUNISTIC, the recursor MUST attempt to
 send any iterative queries over an encrypted transport. However, the
-recursor is allowed to fall back to an unencrypted transport after a 
+recursor is allowed to fall back to an unencrypted transport after a
 failed attempt. If the option is STRICT the recursor MUST NOT perform
 such a fallback at any point during the resolution process. Using
 contents from the cache is always okay as this does not leak any
