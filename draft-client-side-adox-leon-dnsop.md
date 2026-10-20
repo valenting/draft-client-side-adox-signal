@@ -19,11 +19,11 @@
 # Change the file extension to match the format (.xml for XML, etc...)
 #
 ###
-title: "TODO - Your title"
-abbrev: "TODO - Abbreviation"
-category: info
+title: "Client-side Request for Encrypted Authoritative DNS Queries"
+abbrev: "Client-side ADoX Request"
+category: std
 
-docname: draft-todo-yourname-protocol-latest
+docname: draft-client-side-adox-leon-dnsop-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
 date:
