@@ -1,6 +1,6 @@
 ---
 title: "Client-side Request for Encrypted Authoritative DNS Queries"
-abbrev: "Client-side ADoX Request"
+abbrev: "Client-side ADoX Signal"
 category: std
 
 docname: draft-client-side-adox-signal-leon-dnsop-latest
